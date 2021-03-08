@@ -1,14 +1,12 @@
 ---
-title: "EDA"
+title: "DC1: EDA"
 author: "Marium Tapal"
 date: "3/7/2021"
 output: html_document
 ---
 
-```{r, include=FALSE}
+```{r}
 library(tidyverse)
-library(here)
-library(vroom)
 library(readtext)
 library(tm)
 library(SentimentAnalysis)
@@ -21,7 +19,7 @@ library(wordcloud)
 # list of files
 list_of_files <-
   list.files(
-    path = "~/Documents/Spring 2021/SDS 235/sds235/dc1/data/News Articles",
+    path = "~/Documents/Spring 2021/SDS 235/sds235-s21/dc1/data/News Articles",
     recursive = TRUE,
     pattern = "\\.txt$",
     full.names = TRUE
@@ -31,7 +29,7 @@ list_of_files <-
 df <- map_df(list_of_files, readtext)
 
 # change encoding to utf8
-df$text<-stri_enc_toutf8(df$text,is_unknown_8bit = TRUE, validate = FALSE)
+df$text <- stri_enc_toutf8(df$text, is_unknown_8bit = TRUE, validate = FALSE)
 
 # remove non utf8 chars
 df$text <- gsub("[^[:alnum:][:blank:]?&/\\-]", "", df$text)
@@ -52,7 +50,7 @@ dfCorpus <- SimpleCorpus(VectorSource(df$text))
 dfCorpus <- tm_map(dfCorpus, stripWhitespace)
 # 2. Transforming everything to lowercase
 dfCorpus <- tm_map(dfCorpus, content_transformer(tolower))
-# 3. Removing numbers 
+# 3. Removing numbers
 dfCorpus <- tm_map(dfCorpus, removeNumbers)
 # 4. Removing punctuation
 dfCorpus <- tm_map(dfCorpus, removePunctuation)
@@ -67,30 +65,30 @@ inspect(DTM)
 
 # word cloud
 sums <- as.data.frame(colSums(as.matrix(DTM)))
-sums <- rownames_to_column(sums) 
+sums <- rownames_to_column(sums)
 colnames(sums) <- c("term", "count")
 sums <- arrange(sums, desc(count))
-head <- sums[1:75,]
-wordcloud(words = head$term, freq = head$count, min.freq = 2,
-  max.words=500, random.order=FALSE, rot.per=0.35, 
-  colors=brewer.pal(8, "Dark2"))
+head <- sums[1:75, ]
+wordcloud(
+  words = head$term, freq = head$count, min.freq = 2,
+  max.words = 500, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Dark2")
+)
 ```
 
 # Sentiment Analysis
 
 ```{r}
 sent <- analyzeSentiment(DTM, language = "english")
-# were going to just select the Harvard-IV dictionary results ..  
-sent <- sent[,1:4]
-#Organizing it as a dataframe
+# were going to just select the Harvard-IV dictionary results ..
+sent <- sent[, 1:4]
+# Organizing it as a dataframe
 sent <- as.data.frame(sent)
-# Now lets take a look at what these sentiment values look like. 
+# Now lets take a look at what these sentiment values look like.
 head(sent)
 
 summary(sent$SentimentGI)
 ```
-
-Very negative sentiments in Alderwood - something's wrong
 
 ## Emotions
 
@@ -98,21 +96,13 @@ Very negative sentiments in Alderwood - something's wrong
 sent2 <- get_nrc_sentiment(df$text)
 # Let's look at the corpus as a whole again:
 sent3 <- as.data.frame(colSums(sent2))
-sent3 <- rownames_to_column(sent3) 
+sent3 <- rownames_to_column(sent3)
 colnames(sent3) <- c("emotion", "count")
-ggplot(sent3, aes(x = emotion, y = count, fill = emotion)) + geom_bar(stat = "identity") + theme_minimal() + theme(legend.position="none", panel.grid.major = element_blank()) + labs( x = "Emotion", y = "Total Count") + ggtitle("Sentiment of Alderwood News Artclies") + theme(plot.title = element_text(hjust=0.5))
+ggplot(sent3, aes(x = emotion, y = count, fill = emotion)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  theme(legend.position = "none", panel.grid.major = element_blank()) +
+  labs(x = "Emotion", y = "Total Count") +
+  ggtitle("Sentiment of Alderwood News Artclies") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
-
-## Other work:
-
-boynton labs:
-```{r}
-df$text[213]
-df$text[16]
-df$text[19]
-df$text[30]
-df$text[2]
-```
-
-
-
